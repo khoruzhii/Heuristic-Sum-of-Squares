@@ -1,0 +1,53 @@
+program: scripts/train/train.py
+method: grid
+metric:
+  name: test_generation_accuracy
+  goal: maximize
+
+parameters:
+  # Fixed parameters
+  config:
+    value: config/base.yaml
+  experiment:
+    value: sos_coefficients
+  exp_name:
+    value: transformer-polynomial
+  group:
+    value: sos_sweep
+  use_regression:
+    value: true
+
+  data_path:
+    value: "/scratch/llm/ais2t/sos/even/n6_sparse_uniform_simple_random_d10_m40" # directory of dataset
+  
+  learning_rate:
+    values: [0.00005]
+  
+  batch_size:
+    values: [8]
+  
+  num_encoder_layers:
+    values: [8]
+  
+  num_decoder_layers:
+    values: [6]
+  
+  d_model:
+    values: [768]
+  
+  nhead:
+    values: [12]
+
+  weight_decay:
+    values: [0.00005]
+  
+  warmup_ratio:
+    values: [0.05]
+
+
+command:
+  - ${env}
+  - python
+  - -m
+  - scripts.train.train
+  - ${args} 

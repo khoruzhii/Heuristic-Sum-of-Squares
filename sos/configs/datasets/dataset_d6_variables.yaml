@@ -1,0 +1,105 @@
+program: scripts/generate_dataset.py
+method: grid
+metric:
+  name: successful_examples
+  goal: maximize
+
+parameters:
+  # Fixed parameters
+  use_wandb:
+    value: true
+  wandb_project:
+    value: "sos-transformer"
+  output_dir:
+    value: "/scratch/llm/ais2t/sos/"
+  
+  num_examples:
+    values: [1000000]
+  
+  rational:
+    value: false
+
+  # How many digits to use for the coefficients if not rational
+  digits:
+    values: [5]
+  
+  # Polynomial complexity parameters
+  num_variables:
+    values: [4, 6, 8, 10, 12, 14, 16, 18, 20]
+
+  basis_sampler:
+    values: ["sparse_uniform"] # "sparse_uniform", "clique"
+
+  matrix_sampler:
+    values: ["simple_random", "sparse", "lowrank", "blockdiag"] # "simple_random", "sparse", "lowrank", "blockdiag", "non_psd"
+  
+  sparsity:
+    values: [1.0]
+
+  min_sparsity_matrix:
+    values: [0.05]
+  max_sparsity_matrix:
+    values: [0.1]
+
+  max_rank:
+    values: [5]
+
+  min_rank:
+    values: [1]
+
+  max_block_size:
+    values: [10]
+  
+
+  max_denominator:
+    values: [3]
+  max_numerator:
+    values: [4]
+
+  max_degree:
+    values: [6]
+  
+  # Sparsity parameters
+  min_sparsity:
+    values: [0.3]
+  max_sparsity:
+    values: [0.5]
+
+  min_cliques:
+    values: [5]
+  max_cliques:
+    values: [8]
+  min_clique_size:
+    values: [1]
+  max_clique_size:
+    values: [3]
+  max_degree_per_clique:
+    values: [8]
+  
+  # Basis size parameters
+  num_monomials:
+    values: [30]
+  
+  # Matrix parameters
+  min_eigenval:
+    values: [0.0]
+  matrix_scale:
+    values: [0.5]
+
+  # sort the monomials
+  monomial_order:
+    values: ["lex"]
+
+  canonicalization:
+    values: ["none"]
+  
+  # Random seed for reproducibility
+  random_seed:
+    values: [44]
+
+
+
+# Early termination criteria
+early_terminate:
+  type: hyperband
+  min_iter: 100 

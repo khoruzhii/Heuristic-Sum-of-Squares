@@ -1,0 +1,114 @@
+base: &base
+  exp_name: "transformer-polynomial"
+  group: "main"
+  task: "expansion"
+  batch_size: 64
+  test_batch_size: 8
+  epochs: 1
+  seed: 42
+
+  training_size: 8000
+  test_size: 1000
+  train_test_split: false
+  max_degree: 40
+  weight_decay: 0.0
+  train_sample_skimming: true
+  max_sequence_length: 1000
+  
+  model: "custom_bart"
+  embedding_type: "standard"
+  position_encoding_type: "learned"
+  coeff_encoding: "prefix"
+  learning_target: "k-leading-terms"
+  monomial_embedding: true
+
+  save_wandb_artifact: true
+
+environments: &env
+  gpu_id: 0
+  num_workers: 4
+
+real_valued_coefficients: &real_valued_coefficients
+  <<: *base
+  field: "RR"
+  num_variables: 3
+  data_path: "data/reals"
+
+rational_coefficients: &rational_coefficients
+  <<: *base
+  field: "QQ"
+  num_variables: 3
+  data_path: "data/rationals"
+
+prod_real_valued_coefficients: &prod_real_valued_coefficients
+  <<: *base
+  field: "RR"
+  num_variables: 3
+  data_path: "data/multiplication/real"
+
+prod_rational_coefficients: &prod_rational_coefficients
+  <<: *base
+  field: "QQ"
+  num_variables: 3
+  data_path: "data/rational"
+
+add_real_valued_coefficients: &add_real_valued_coefficients
+  <<: *base
+  field: "RR"
+  num_variables: 3
+  data_path: "data/addition/real"
+
+add_rational_coefficients: &add_rational_coefficients
+  <<: *base
+  field: "QQ"
+  num_variables: 3
+  data_path: "data/addition/rational"
+
+sos_coefficients: &sos_coefficients
+  <<: *base
+  field: "RR"
+  num_variables: 4
+  data_path: ""
+  data_format: "polynomial_basis" 
+  batch_size: 64 
+  test_batch_size: 2 
+  gradient_accumulation_steps: 4  
+  max_sequence_length: 2048  
+  num_workers: 8  
+  training_size: 990000
+
+experiments:
+  real_valued_coefficients:
+    <<: *real_valued_coefficients
+    num_leading_terms: 1
+    tags: ["real-valued-coefficients"]
+
+  rational_coefficients:
+    <<: *rational_coefficients
+    num_leading_terms: 1
+    tags: ["rational-coefficients"]
+
+  prod_real_valued_coefficients:
+    <<: *prod_real_valued_coefficients
+    num_leading_terms: 1
+    tags: ["prod-real-valued-coefficients"]
+
+  prod_rational_coefficients:
+    <<: *prod_rational_coefficients
+    num_leading_terms: 1
+    tags: ["prod-rational-coefficients"]
+
+  add_real_valued_coefficients:
+    <<: *add_real_valued_coefficients
+    num_leading_terms: 1
+    tags: ["add-real-valued-coefficients"]
+
+  add_rational_coefficients:
+    <<: *add_rational_coefficients
+    num_leading_terms: 1
+    tags: ["add-rational-coefficients"]
+
+  sos_coefficients:
+    <<: *sos_coefficients
+    num_leading_terms: 1
+    tags: ["sos-coefficients"]

@@ -1,0 +1,42 @@
+program: scripts/run_sdp_oracles_wandb.py
+method: grid
+metric:
+  name: success_rate
+  goal: maximize
+
+
+parameters:
+  # Fixed parameters
+  oracle:
+    values: ["transformer"] 
+  solver:
+    values: ["MOSEK"]
+  max_examples:
+    value: 100
+  use_basis_extension:
+    value: "true"
+  basis_extension_max_iter:
+    value: 20
+  permutations:
+    value: 1
+  mode:
+    value: "permutation_all"
+  ood:
+    value: true
+
+  input_path:
+    values: [
+      "/scratch/llm/ais2t/sos/variable/n6_sparse_uniform_sparse_d6_m30/test.jsonl",     
+    ]
+
+  model_path:
+    values: [
+      "/scratch/htc/npelleriti/models/sos-transformer/variable/n6_sparse_uniform_sparse_d6_m30"
+    ]
+
+
+command:
+  - ${env}
+  - python
+  - ${program}
+  - ${args}

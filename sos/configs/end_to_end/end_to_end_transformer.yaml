@@ -1,0 +1,44 @@
+program: scripts/run_cascading_oracles_wandb.py
+method: grid
+metric:
+  name: success_rate
+  goal: maximize
+
+parameters:
+  # Fixed parameters
+  solver:
+    values: ["MOSEK"]
+  max_examples:
+    value: 100
+  use_basis_extension:
+    value: "true"
+  basis_extension_max_iter:
+    value: 20
+  expansion_factor:
+    values: [1.5]
+  min_expansion_size:
+    values: [10]
+  permutations:
+    values: [4]
+  permutation_mode:
+    values: ["permutation_all"]
+  verbose:
+    value: true
+  ood:
+    value: true
+
+  input_path:
+    values: [
+      "/scratch/llm/ais2t/sos/ood/n6_sparse_uniform_blockdiag_d6_m30/test.jsonl",
+    ]
+
+  model_path:
+    values: [
+       "/scratch/htc/npelleriti/models/sos-transformer/variable/n6_sparse_uniform_blockdiag_d6_m30"
+    ]
+
+command:
+  - ${env}
+  - python
+  - ${program}
+  - ${args}

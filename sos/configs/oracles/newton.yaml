@@ -1,0 +1,27 @@
+program: scripts/run_sdp_oracles_wandb.py
+method: grid
+metric:
+  name: success_rate
+  goal: maximize
+
+
+parameters:
+  # Fixed parameters
+  oracle:
+    values: ["newton"] 
+  solver:
+    values: ["MOSEK"]
+  max_examples:
+    value: 100  
+
+  input_path:
+    values: [
+      "/scratch/llm/ais2t/sos/variable/n6_sparse_uniform_sparse_d6_m30/test.jsonl",     
+    ]
+
+
+command:
+  - ${env}
+  - python
+  - ${program}
+  - ${args}
