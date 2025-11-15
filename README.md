@@ -82,3 +82,19 @@ Solver configurations are defined in `sos/configs/solvers/solver_settings.jsonl`
 - **Cascading Approach**: Combines transformer predictions with Newton polytope fallbacks
 - **Basis Extension**: Automatic repair of incomplete predicted bases
 - **Scalable**: Handles polynomials with up to $100$ variables and degrees up to $20$
+
+
+## Citation 
+If you use this repository or its ideas in your research, please cite:
+
+```bash
+@misc{pelleriti2025neuralsumofsquares,
+      title={Neural Sum-of-Squares: Certifying the Nonnegativity of Polynomials with Transformers}, 
+      author={Nico Pelleriti and Christoph Spiegel and Shiwei Liu and David Martínez-Rubio and Max Zimmer and Sebastian Pokutta},
+      year={2025},
+      eprint={2510.13444},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2510.13444}, 
+}
+```
