@@ -2,6 +2,10 @@
 
 A transformer-based approach for predicting Sum-of-Squares (SOS) decomposition bases for polynomial optimization problems.
 
+![Schematic](assets/schematic.png)
+
+*Figure 1: Overview of our approach for SOS verification: given a polynomial, a Transformer predicts a compact basis, then the basis is adjusted to ensure necessary conditions are met, and an SDP is solved with iterative expansion if needed. The method guarantees correctness: if a SOS certificate exists, it will be found; otherwise, infeasibility is certified at the full basis.*
+
 ## Overview
 
 This project implements a transformer model that predicts monomial bases for SOS decompositions, providing an efficient alternative to traditional convex optimization approaches for polynomial feasibility problems.
