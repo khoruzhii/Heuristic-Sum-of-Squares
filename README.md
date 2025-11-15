@@ -87,7 +87,7 @@ Solver configurations are defined in `sos/configs/solvers/solver_settings.jsonl`
 ## Citation 
 If you use this repository or its ideas in your research, please cite:
 
-```bash
+```bibtex
 @misc{pelleriti2025neuralsumofsquares,
       title={Neural Sum-of-Squares: Certifying the Nonnegativity of Polynomials with Transformers}, 
       author={Nico Pelleriti and Christoph Spiegel and Shiwei Liu and David Martínez-Rubio and Max Zimmer and Sebastian Pokutta},
