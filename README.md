@@ -5,6 +5,16 @@
   <a href="https://www.pelleriti.org/posts/2025/12/neural-sum-of-squares/">📝 Blog</a>
 </p>
 
+<p align="center">
+  <strong>Authors:</strong>
+  <a href="https://www.pelleriti.org/">Nico Pelleriti</a>,
+  <a href="https://christophspiegel.berlin/">Christoph Spiegel</a>,
+  <a href="https://shiweiliuiiiiiii.github.io/">Shiwei Liu</a>,
+  <a href="https://damaru2.github.io/">David Martínez-Rubio</a>,
+  <a href="https://maxzimmer.org/">Max Zimmer</a>,
+  <a href="https://pokutta.com/">Sebastian Pokutta</a>
+</p>
+
 This repository is the official implementation of our ICLR 2026 paper, *Neural Sum-of-Squares: Certifying the Nonnegativity of Polynomials with Transformers*.
 
 <p align="center">
