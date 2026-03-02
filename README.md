@@ -1,16 +1,20 @@
 # Sum-of-Squares Transformer
 
-This repository is the official implementation of our ICLR 2026 paper, [*Neural Sum-of-Squares: Certifying the Nonnegativity of Polynomials with Transformers*](https://arxiv.org/abs/2510.13444).
+<p align="center">
+  <a href="https://arxiv.org/abs/2510.13444">📄 Paper</a> ·
+  <a href="https://www.pelleriti.org/posts/2025/12/neural-sum-of-squares/">📝 Blog</a>
+</p>
 
-A transformer-based approach for predicting Sum-of-Squares (SOS) decomposition bases for polynomial optimization problems.
+This repository is the official implementation of our ICLR 2026 paper, *Neural Sum-of-Squares: Certifying the Nonnegativity of Polynomials with Transformers*.
 
-![Schematic](assets/schematic_big.png)
-
+<p align="center">
+  <img src="assets/schematic_big.png" alt="Schematic" />
+</p>
 *Figure 1: Overview of our approach for SOS verification: given a polynomial, a Transformer predicts a compact basis, then the basis is adjusted to ensure necessary conditions are met, and an SDP is solved with iterative expansion if needed. The method guarantees correctness: if a SOS certificate exists, it will be found; otherwise, infeasibility is certified at the full basis.*
 
 ## Overview
 
-This project implements a transformer model that predicts monomial bases for SOS decompositions, providing an efficient alternative to traditional convex optimization approaches for polynomial feasibility problems.
+This codebase implements the full Neural Sum-of-Squares pipeline: synthetic dataset generation, transformer training for monomial basis prediction, and end-to-end SOS verification with cascading oracle fallback. It also includes solver configuration support (MOSEK, SCS, Clarabel, SDPA), basis repair/extension, and experiment workflows via `wandb` sweeps.
 
 ## Requirements
 
@@ -68,7 +72,7 @@ wandb agent <sweep_id>
 The framework supports multiple SDP solvers with configurable precision:
 
 - **MOSEK**: Commercial solver (default, free with academic licence)
-- **SCS**: Open-source conic solver  
+- **SCS**: Open-source conic solver
 - **CLARABEL**: Rust-based interior point solver
 - **SDPA**: Semi-definite programming solver
 
@@ -89,8 +93,7 @@ Solver configurations are defined in `sos/configs/solvers/solver_settings.jsonl`
 - **Basis Extension**: Automatic repair of incomplete predicted bases
 - **Scalable**: Handles polynomials with up to $100$ variables and degrees up to $20$
 
-
-## Citation 
+## Citation
 If you use this repository or its ideas in your research, please cite:
 
 ```bibtex
