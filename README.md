@@ -10,6 +10,7 @@ This repository is the official implementation of our ICLR 2026 paper, *Neural S
 <p align="center">
   <img src="assets/schematic_big.png" alt="Schematic" />
 </p>
+
 *Figure 1: Overview of our approach for SOS verification: given a polynomial, a Transformer predicts a compact basis, then the basis is adjusted to ensure necessary conditions are met, and an SDP is solved with iterative expansion if needed. The method guarantees correctness: if a SOS certificate exists, it will be found; otherwise, infeasibility is certified at the full basis.*
 
 ## Overview
