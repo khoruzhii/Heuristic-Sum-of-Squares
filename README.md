@@ -1,4 +1,4 @@
-# NSOS — Fast basis recovery for SOS verification
+# Fast basis recovery for SOS verification
 
 Fork of the [Neural Sum-of-Squares](https://arxiv.org/abs/2510.13444) (ICLR 2026) codebase with two lightweight heuristics that recover near-minimal monomial bases without a trained model, achieving comparable basis sizes mostly in under a second.
 
@@ -21,7 +21,7 @@ Avoids computing the Newton polytope entirely. Two steps:
 **Step 1 — integer vertices via LP.** A support point `v` with all-even coordinates is a vertex of `conv(supp(p))` iff it cannot be written as a convex combination of the remaining support points:
 
 ```math
-v \notin \operatorname{conv}(S \setminus \{v\}) \;\Longleftrightarrow\; \nexists\, \lambda \geq 0,\; \sum \lambda_i = 1,\; \sum \lambda_i s_i = v.
+v \notin \mathrm{conv}(S \setminus \{v\}) \;\Longleftrightarrow\; \nexists\, \lambda \geq 0,\; \sum \lambda_i = 1,\; \sum \lambda_i s_i = v.
 ```
 
 Each such vertex contributes the basis monomial `x^{v/2}`. One LP per candidate, no ConvexHull needed.
