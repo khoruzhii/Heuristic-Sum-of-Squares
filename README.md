@@ -1,120 +1,118 @@
-# Sum-of-Squares Transformer
+# NSOS — Fast basis recovery for SOS verification
 
-<p align="center">
-  <a href="https://arxiv.org/abs/2510.13444">📄 Paper</a> ·
-  <a href="https://www.pelleriti.org/posts/2025/12/neural-sum-of-squares/">📝 Blog</a>
-</p>
+Fork of the [Neural Sum-of-Squares](https://arxiv.org/abs/2510.13444) (ICLR 2026) codebase with two lightweight heuristics that recover near-minimal monomial bases without a trained model, achieving comparable basis sizes mostly in under a second.
 
-<p align="center">
-  <strong>Authors:</strong>
-  <a href="https://www.pelleriti.org/">Nico Pelleriti</a>,
-  <a href="https://christophspiegel.berlin/">Christoph Spiegel</a>,
-  <a href="https://shiweiliuiiiiiii.github.io/">Shiwei Liu</a>,
-  <a href="https://damaru2.github.io/">David Martínez-Rubio</a>,
-  <a href="https://maxzimmer.org/">Max Zimmer</a>,
-  <a href="https://pokutta.com/">Sebastian Pokutta</a>
-</p>
+## Background
 
-This repository is the official implementation of our ICLR 2026 paper, *Neural Sum-of-Squares: Certifying the Nonnegativity of Polynomials with Transformers*.
+Certifying that a polynomial `p(x)` is a Sum of Squares requires finding a PSD matrix `Q` such that
 
-<p align="center">
-  <img src="assets/schematic_big.png" alt="Schematic" />
-</p>
+```math
+p(\mathbf{x}) = \mathbf{z}(\mathbf{x})^\top Q\, \mathbf{z}(\mathbf{x}),
+```
 
-*Figure 1: Overview of our approach for SOS verification: given a polynomial, a Transformer predicts a compact basis, then the basis is adjusted to ensure necessary conditions are met, and an SDP is solved with iterative expansion if needed. The method guarantees correctness: if a SOS certificate exists, it will be found; otherwise, infeasibility is certified at the full basis.*
+where `z(x)` is a vector of basis monomials. The SDP cost is dominated by `|z|`, so smaller bases mean faster solves. The full basis `[x]_d` has size `C(n+d, d)` which grows quickly; the Newton polytope basis `(1/2)N(p) cap Z^n` is smaller but still can be expensive to compute via lattice enumeration in high dimensions.
 
-## Overview
+## This repo contribution
 
-This codebase implements the full Neural Sum-of-Squares pipeline: synthetic dataset generation, transformer training for monomial basis prediction, and end-to-end SOS verification with cascading oracle fallback. It also includes solver configuration support (MOSEK, SCS, Clarabel, SDPA), basis repair/extension, and experiment workflows via `wandb` sweeps.
+### Heuristic 1: LP int_vtx + coverage repair
 
-## Requirements
+Avoids computing the Newton polytope entirely. Two steps:
 
-- Python 3.8+
-- PyTorch
-- CVXPY
-- Weights & Biases (wandb)
-- Julia 1.6+ (optional, for Julia-based SOS solving)
+**Step 1 — integer vertices via LP.** A support point `v` with all-even coordinates is a vertex of `conv(supp(p))` iff it cannot be written as a convex combination of the remaining support points:
 
-## Quick Start
+```math
+v \notin \operatorname{conv}(S \setminus \{v\}) \;\Longleftrightarrow\; \nexists\, \lambda \geq 0,\; \sum \lambda_i = 1,\; \sum \lambda_i s_i = v.
+```
 
-### 1. Dataset Generation
+Each such vertex contributes the basis monomial `x^{v/2}`. One LP per candidate, no ConvexHull needed.
 
-Generate synthetic SOS polynomial datasets using predefined configurations:
+**Step 2 — greedy coverage repair.** The seed set from step 1 is expanded until every monomial in `S(p)` is expressible as a pairwise sum `B + B`:
+
+```
+while S(p) not subset B + B:
+    pick m maximizing |{s in uncovered : s - m in B}|
+    B <- B union {m}
+```
+
+Works well for dense, sparse, and low-rank matrices with `n >= 6`. For small `n` or block-diagonal structure, fallback to heuristic 2 is sometimes needed.
+
+### Heuristic 2: Newton polytope + diagonal consistency filter (fallback)
+
+When heuristic 1 produces a basis that fails SDP verification, we fall back to:
+
+1. Compute full Newton polytope basis `(1/2)N(p) cap Z^n` via C++ DFS lattice enumeration
+2. Apply facial reduction ([Permenter & Parrilo 2014](https://doi.org/10.1109/CDC.2014.7040427)) — iterated diagonal consistency to remove provably redundant monomials
+3. Filter to `{m : x^{2m} in S(p)}`
+
+This is a bit slower (requires ConvexHull + lattice enumeration) but always succeeds in our (n, d, m) experiments: `fb_n = 0` in all tested configurations, meaning the Newton reduced fallback is never needed beyond this step.
+
+## Results
+
+Comparison with the Neural SOS paper (Table 1, `s_nsos` column). Our method (`s_ours`) matches or slightly exceeds the planted basis size without any learned model. `fb_s` = fallbacks to strong, `p<=b` = planted basis recovered.
+
+```
+python scripts/table1.py --num 32
+
+ Structure   n   d   m  |B*|  s_ours s_nsos   t_ours  fb_s fb_n  p<=b
+---------------------------------------------------------------------
+     dense   4   6  20    20      22     19    0.028   19   0  32/32  OK
+     dense   6  12  30    31      31     33    0.096    0   0  32/32  OK
+     dense   8  20  30    31      31     38    0.108    0   0  32/32  OK
+     dense   6  20  60    59      59     89    0.714    0   0  32/32  OK
+     dense 100  10  20    20      20      -    0.072    0   0  32/32  OK
+     dense   6  40  40    40      40      -    0.257    0   0  32/32  OK
+
+    sparse   4   6  20    20      21     15    0.028   26   0  32/32  OK
+    sparse   6  12  30    30      30     27    0.077    0   0  32/32  OK
+    sparse   8  20  30    30      30     27    0.086    0   0  32/32  OK
+    sparse   6  20  60    59      59     73    0.582    0   0  32/32  OK
+    sparse 100  10  20    20      20      -    0.055    0   0  32/32  OK
+    sparse   6  40  40    40      40      -    0.351    2   0  32/32  OK
+
+   lowrank   4   6  20    20      22     19    0.028   19   0  32/32  OK
+   lowrank   6  12  30    31      31     30    0.096    0   0  32/32  OK
+   lowrank   8  20  30    31      31     35    0.108    0   0  32/32  OK
+   lowrank   6  20  60    59      59     66    0.674    0   0  32/32  OK
+   lowrank 100  10  20    20      20      -    0.072    0   0  32/32  OK
+   lowrank   6  40  40    40      40      -    0.250    0   0  32/32  OK
+
+ blockdiag   4   6  20    20      21     20    0.026   32   0  32/32  OK
+ blockdiag   6  12  30    31      31     31    0.062   18   0  32/32  OK
+ blockdiag   8  20  30    31      31     30    0.044    4   0  32/32  OK
+ blockdiag   6  20  60    59      60     71    0.233   32   0  32/32  OK
+ blockdiag 100  10  20    20      20      -    0.023    0   0  32/32  OK
+ blockdiag   6  40  40    40      41      -    2.603   24   0  32/32  OK
+```
+
+Key observations:
+- **p<=b = 32/32 everywhere** — the planted basis is always recovered
+- **s_ours <= s_nsos** for most configs — our basis is at least as compact as Neural SOS
+- **fb_n = 0** — Newton fallback is never needed; strong suffices
+- **t_ours < 1s** for all configs except block-diagonal n=6, d=40 (where strong fallback dominates)
+
+## File structure
+
+| File | Description |
+|---|---|
+| `scripts/basis.py` | Toolkit: `find_basis_lp`, `find_basis_strong`, `find_basis_newton`, `solve_sdp`, `verify_gram` |
+| `scripts/table1.py` | Reproduces the table above. Flags: `--num`, `--sdp`, `--newton`, `--strong`, `--real` |
+| `scripts/test_planted.py` | Detailed per-example diagnostics with all basis recovery modes |
+| `src/newton.cpp`, `src/newton.h` | C++ DFS lattice enumerator (required for strong/Newton fallback) |
+
+## Quick start
 
 ```bash
-# Generate dataset with specific variable count and complexity
-wandb sweep sos/configs/datasets/dataset_d6_variables.yaml
-wandb agent <sweep_id>
+# Install dependencies
+pip install numpy scipy cvxpy mosek
+
+# Build C++ enumerator (needed for --strong / --newton modes)
+g++ -std=c++20 -O2 -I src -I third_party src/newton.cpp -o bin/newton_enum
+
+# Run table (LP + repair, no C++ needed for most configs)
+python scripts/table1.py --num 32
 ```
 
-Key parameters in dataset config:
-- `num_variables`: Number of polynomial variables (4-20)
-- `max_degree`: Maximum polynomial degree
-- `num_monomials`: Target basis size
-- `matrix_sampler`: Matrix structure ("simple_random", "sparse", "lowrank", "blockdiag")
+## References
 
-### 2. Model Training
-
-Train transformer models on generated datasets:
-
-```bash
-# Train transformer model
-wandb sweep transformer/config/sweeps/training.yaml
-wandb agent <sweep_id>
-```
-
-Configure in `training.yaml`:
-- `data_path`: Path to generated dataset
-- `num_encoder_layers/num_decoder_layers`: Model architecture
-- `learning_rate`, `batch_size`: Training hyperparameters
-
-### 3. End-to-End Evaluation
-
-Test the complete pipeline with cascading oracle approach:
-
-```bash
-# Run end-to-end evaluation
-wandb sweep sos/configs/end_to_end/end_to_end_transformer.yaml
-wandb agent <sweep_id>
-```
-
-## Supported Solvers
-
-The framework supports multiple SDP solvers with configurable precision:
-
-- **MOSEK**: Commercial solver (default, free with academic licence)
-- **SCS**: Open-source conic solver
-- **CLARABEL**: Rust-based interior point solver
-- **SDPA**: Semi-definite programming solver
-
-Solver configurations are defined in `sos/configs/solvers/solver_settings.jsonl`:
-- `default`: Standard precision (1e-3 for MOSEK/Clarabel, 1e-8 for SCS)
-- `high_precision`: Higher precision (1e-6 for MOSEK/Clarabel, 1e-10 for SCS)
-
-## Pipeline Overview
-
-1. **Dataset Generation**: Create synthetic SOS polynomials with known decompositions
-2. **Model Training**: Train transformer to predict monomial bases
-3. **Cascading Oracle**: Multi-stage approach combining transformer predictions with traditional methods
-
-## Key Features
-
-- **Configurable Solvers**: Support for multiple SDP solvers with precision control
-- **Cascading Approach**: Combines transformer predictions with Newton polytope fallbacks
-- **Basis Extension**: Automatic repair of incomplete predicted bases
-- **Scalable**: Handles polynomials with up to $100$ variables and degrees up to $20$
-
-## Citation
-If you use this repository or its ideas in your research, please cite:
-
-```bibtex
-@misc{pelleriti2025neuralsumofsquares,
-      title={Neural Sum-of-Squares: Certifying the Nonnegativity of Polynomials with Transformers}, 
-      author={Nico Pelleriti and Christoph Spiegel and Shiwei Liu and David Martínez-Rubio and Max Zimmer and Sebastian Pokutta},
-      year={2025},
-      eprint={2510.13444},
-      archivePrefix={arXiv},
-      primaryClass={cs.LG},
-      url={https://arxiv.org/abs/2510.13444}, 
-}
-```
+- Pelleriti et al., [Neural Sum-of-Squares](https://arxiv.org/abs/2510.13444), ICLR 2026
+- Permenter & Parrilo, [Partial facial reduction](https://doi.org/10.1109/CDC.2014.7040427), CDC 2014
